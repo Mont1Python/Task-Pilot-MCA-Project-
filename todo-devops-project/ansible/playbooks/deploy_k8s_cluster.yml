@@ -1,0 +1,26 @@
+- name: Deploy Kubernetes Cluster
+  hosts: kubernetes_master, kubernetes_workers
+  gather_facts: yes
+  tasks:
+    - name: Run common setup
+      ansible.builtin.include_tasks: ../playbooks/common_setup.yml
+
+    - name: Run containerd installation
+      ansible.builtin.include_tasks: ../playbooks/install_containerd.yml
+
+    - name: Run kubeadm/kubelet/kubectl installation
+      ansible.builtin.include_tasks: ../playbooks/install_kube_tools.yml
+
+- name: Initialize Master and Join Workers
+  hosts: kubernetes_master
+  gather_facts: false
+  tasks:
+    - name: Run master initialization
+      ansible.builtin.include_tasks: ../playbooks/init_master.yml
+
+- name: Join Workers (after master is ready)
+  hosts: kubernetes_workers
+  gather_facts: false
+  tasks:
+    - name: Run worker joining
+      ansible.builtin.include_tasks: ../playbooks/join_workers.yml

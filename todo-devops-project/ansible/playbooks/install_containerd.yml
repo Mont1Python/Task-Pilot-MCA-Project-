@@ -1,0 +1,35 @@
+- name: Install and configure Containerd
+  hosts: kubernetes_master, kubernetes_workers
+  become: true
+  tasks:
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Install containerd
+      apt:
+        name: containerd.io
+        state: present
+        update_cache: yes
+
+    - name: Create default containerd config file
+      command: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Enable systemd cgroup driver for containerd
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+    
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes

@@ -1,0 +1,22 @@
+- name: Join Kubernetes Worker Nodes
+  hosts: kubernetes_workers
+  become: true
+  tasks:
+    - name: Retrieve join command from local file
+      slurp:
+        src: /tmp/kube_join_command.sh
+      register: join_command_slurp
+      delegate_to: localhost
+      run_once: true
+
+    - name: Set join_command fact
+      set_fact:
+        kube_join_command: "{{ join_command_slurp.content | b64decode }}"
+
+    - name: Join worker node to cluster
+      command: "{{ kube_join_command }}"
+      register: join_output
+
+    - name: Display join output
+      debug:
+        var: join_output.stdout_lines

@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      PGUSER: user
+      PGHOST: db
+      PGDATABASE: todoapp
+      PGPASSWORD: password
+      PGPORT: 5432
+    depends_on:
+      - db
+    # volumes: # Optional: Mount local code for live reloading during dev
+    #   - ./backend:/app
+    #   - /app/node_modules # Exclude node_modules from host mount
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    environment:
+      REACT_APP_API_URL: http://backend:3001 # Frontend talks to backend service name
+    depends_on:
+      - backend
+    # volumes: # Optional: Mount local code for live reloading during dev
+    #   - ./frontend:/app
+    #   - /app/node_modules # Exclude node_modules from host mount
+  db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: todoapp
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:
